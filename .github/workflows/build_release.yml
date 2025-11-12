@@ -122,3 +122,5 @@ jobs:
             This is automatically generated, untested build
             
           files: "${{ needs.get_tag.outputs.RELEASE_TAG }}.zip"
+          repository: PAMEH-2045/MEPhysBone
+          token: ${{ secrets.MEPHYSBONE_CREATE_RELEASES_TOKEN }}
