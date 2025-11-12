@@ -1,0 +1,124 @@
+name: Build and Release
+
+on:
+  repository_dispatch:
+    types: build_trigger
+  workflow_dispatch:
+  
+jobs:
+  get_tag:
+    name: Getting tag
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_TAG: ${{ steps.get_tag.outputs.RELEASE_TAG }}
+     
+    steps:
+      - name: Get TAG
+        id: get_tag
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/shinyflvre/Mate-Engine/releases/latest | jq -r '.tag_name')
+          echo "RELEASE_TAG=MEPhysBone_$LATEST" >> $GITHUB_OUTPUT
+          
+  sync_upstream:
+    name: Syncing with upstream
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - uses: thiagokokada/merge-upstream@v1.0.2
+        with:
+          branch: main
+          
+  build:
+    name: Building
+    runs-on: windows-latest
+    needs: [get_tag, sync_upstream]
+      
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          
+      # Cache
+      - uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: StandaloneWindows64
+          buildName: MateEngineX
+
+      # Output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Build
+          path: build
+          
+  release:
+    name: Releasing
+    runs-on: ubuntu-latest
+    needs: [build, get_tag]
+    
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: Build
+          
+      - name: Copy required files
+        env:
+          RELEASE_TAG: ${{ needs.get_tag.outputs.RELEASE_TAG }}
+        run: |
+          FROM="StandaloneWindows64/MateEngineX_Data"
+          TO="$RELEASE_TAG/MateEngineX_Data"
+          
+          mkdir -p "$TO"
+          
+          FILES=(
+            "RuntimeInitializeOnLoads.json"
+            "ScriptingAssemblies.json"
+            "Managed/UnityEngine.CoreModule.dll"
+            "Managed/mscorlib.dll"
+            "Managed/System.Collections.Immutable.dll"
+            "Managed/UniTask.dll"
+            "Managed/Unity.Collections.dll"
+            "Managed/Unity.Mathematics.dll"
+            "Managed/VRC.Dynamics.dll"
+            "Managed/VRC.SDK3.Dynamics.Constraint.dll"
+            "Managed/VRC.SDK3.Dynamics.PhysBone.dll"
+          )
+          
+          for file in "${FILES[@]}"; do
+            mkdir -p "$TO/$(dirname "$file")"
+            cp "$FROM/$file" "$TO/$file"
+          done
+
+          zip -r "$RELEASE_TAG.zip" "$RELEASE_TAG"
+          
+          find .
+          
+      
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.get_tag.outputs.RELEASE_TAG }}
+          body: |
+            Installation:
+            1. Download ${{ needs.get_tag.outputs.RELEASE_TAG }}.zip and unpack
+            2. Copy and paste MateEngineX_Data folder to game root with overwrite
+            
+            This is automatically generated, untested build
+            
+          files: "${{ needs.get_tag.outputs.RELEASE_TAG }}.zip"

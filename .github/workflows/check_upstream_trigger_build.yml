@@ -1,0 +1,41 @@
+name: Check Upstream and Trigger Build
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check_upstream_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout artifacts branch
+        uses: actions/checkout@v4
+        with:
+          ref: artifacts_latest_release
+          persist-credentials: true
+
+      - name: Get latest upstream release
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/shinyflvre/Mate-Engine/releases/latest | jq -r '.tag_name')
+          echo "$LATEST" > .last_release
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .last_release
+          if ! git diff --cached --quiet; then
+            git commit -m "Update last_release to $LATEST"
+            git push origin artifacts_latest_release
+            echo "CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "No changes, nothing to commit."
+          fi
+          
+      - name: Trigger Build Action
+        if: env.CHANGED == 'true'
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          event-type: build_trigger
