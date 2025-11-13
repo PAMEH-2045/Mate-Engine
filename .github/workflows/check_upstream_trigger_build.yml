@@ -25,6 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
       - name: Update STORED_ME_RELEASE
         env:
            GITHUB_TOKEN: ${{ secrets.MEFORK_PHYSBONE_WRITE_VARS_TOKEN }}
