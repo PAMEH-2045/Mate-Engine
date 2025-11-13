@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check_upstream_release:
+  get_upstream_release:
     runs-on: ubuntu-latest
     outputs:
       LATEST: ${{ steps.get_latest.outputs.LATEST }}
@@ -20,8 +20,8 @@ jobs:
           
   trigger_build_update_tag:
     name: Trigger build and Update tag
-    needs: check_upstream_release
-    if: ${{ vars.STORED_ME_RELEASE != needs.check_upstream_release.outputs.LATEST }}
+    needs: get_upstream_release
+    if: ${{ vars.STORED_ME_RELEASE != needs.get_upstream_release.outputs.LATEST }}
     runs-on: ubuntu-latest
     
     steps:
@@ -31,7 +31,7 @@ jobs:
       - name: Update STORED_ME_RELEASE
         env:
            GITHUB_TOKEN: ${{ secrets.MEFORK_PHYSBONE_WRITE_VARS_TOKEN }}
-           LATEST: ${{ needs.check_upstream_release.outputs.LATEST }}
+           LATEST: ${{ needs.get_upstream_release.outputs.LATEST }}
         run: gh variable set STORED_ME_RELEASE --body "$LATEST"
           
       - name: Trigger Build Action

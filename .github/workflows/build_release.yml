@@ -34,7 +34,7 @@ jobs:
     needs: [get_tag, sync_upstream]
       
     steps:
-      - name: Checkout main
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           #ref: ${{ vars.STORED_ME_RELEASE }}
