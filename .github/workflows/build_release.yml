@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Get TAG
         id: get_tag
-        run: echo "RELEASE_TAG=MEPhysBone_${{ vars.LATEST_ME_RELEASE }}" >> $GITHUB_OUTPUT
+        run: echo "RELEASE_TAG=MEPhysBone_${{ vars.STORED_ME_RELEASE }}" >> $GITHUB_OUTPUT
           
   sync_upstream:
     name: Syncing with upstream
@@ -37,7 +37,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: ${{ vars.LATEST_ME_RELEASE }}
+          ref: ${{ vars.STORED_ME_RELEASE }}
           lfs: true
           
       # Cache
