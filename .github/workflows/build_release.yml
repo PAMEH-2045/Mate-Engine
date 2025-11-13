@@ -37,7 +37,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: ${{ vars.STORED_ME_RELEASE }}
+          #ref: ${{ vars.STORED_ME_RELEASE }}
           lfs: true
           
       # Cache
