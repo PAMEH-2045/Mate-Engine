@@ -82,7 +82,7 @@ public class AvatarMouseTracking : MonoBehaviour
             vrmLookAtTarget = new GameObject("VRMLookAtTarget").transform;
             vrmLookAtTarget.SetParent(transform, false);
             vrm10.LookAtTarget = vrmLookAtTarget;
-            vrm10.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.YawPitchValue;
+            vrm10.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
         }
         if (!leftEyeBone || !rightEyeBone)
         {
@@ -176,20 +176,6 @@ public class AvatarMouseTracking : MonoBehaviour
     {
         var mouse = Input.mousePosition;
         var world = mainCam.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, mainCam.nearClipPlane));
-        if (vrm10 && vrmLookAtTarget)
-        {
-            vrmLookAtTarget.position = world;
-            var par = vrmLookAtTarget.parent ?? transform;
-            Matrix4x4 mtx = Matrix4x4.TRS(par.position, par.rotation, Vector3.one);
-            var (rawYaw, rawPitch) = mtx.CalcYawPitch(world);
-            float yaw = Mathf.Clamp(-rawYaw, -eyeYawLimit, eyeYawLimit);
-            float pitch = Mathf.Clamp(rawPitch, -eyePitchLimit, eyePitchLimit);
-            var currFwd = vrmLookAtTarget.forward;
-            var tgtFwd = Quaternion.Euler(-pitch, yaw, 0f) * Vector3.forward;
-            var smooth = Vector3.Slerp(currFwd, tgtFwd, Time.deltaTime * eyeSmoothness);
-            vrmLookAtTarget.rotation = Quaternion.LookRotation(smooth);
-            return;
-        }
         if (!leftEyeBone || !rightEyeBone || !eyeCenter) return;
         eyeCenter.position = (leftEyeBone.position + rightEyeBone.position) * 0.5f;
         var dir = (world - eyeCenter.position).normalized;
@@ -197,6 +183,21 @@ public class AvatarMouseTracking : MonoBehaviour
         float eyeYaw = Mathf.Clamp(Mathf.Atan2(localDir.x, localDir.z) * Mathf.Rad2Deg, -eyeYawLimit, eyeYawLimit);
         float eyePitch = Mathf.Clamp(Mathf.Asin(localDir.y) * Mathf.Rad2Deg, -eyePitchLimit, eyePitchLimit);
         var eyeRot = Quaternion.Euler(-eyePitch, eyeYaw, 0f);
+
+        if (vrm10 && vrmLookAtTarget)
+        {
+            var eyeFwd = (eyeRot * Vector3.forward).normalized;
+            var worldDirToTarget = eyeCenter.TransformDirection(eyeFwd);
+
+            Plane mainCamPlane = new Plane(mainCam.transform.forward, world);
+            Ray rayToTarget = new Ray(eyeCenter.position, worldDirToTarget);
+            mainCamPlane.Raycast(rayToTarget, out float enter);
+            var newTargetPoint = rayToTarget.GetPoint(enter);
+
+            vrmLookAtTarget.position = Vector3.Lerp(vrmLookAtTarget.position, newTargetPoint, Time.deltaTime * eyeSmoothness);
+            return;
+        }
+
         leftEyeDriver.localRotation = Quaternion.Slerp(leftEyeDriver.localRotation, eyeRot, Time.deltaTime * eyeSmoothness);
         rightEyeDriver.localRotation = Quaternion.Slerp(rightEyeDriver.localRotation, eyeRot, Time.deltaTime * eyeSmoothness);
         leftEyeBone.localRotation = Quaternion.Slerp(leftEyeBone.localRotation, leftEyeDriver.localRotation, eyeBlend);
