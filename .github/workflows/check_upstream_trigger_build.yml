@@ -21,7 +21,7 @@ jobs:
   trigger_build_update_tag:
     name: Trigger build and Update tag
     needs: get_upstream_release
-    if: ${{ vars.STORED_ME_RELEASE != needs.get_upstream_release.outputs.LATEST }}
+    if: ${{ vars.STORED_ME_RELEASE != needs.get_upstream_release.outputs.LATEST && needs.get_upstream_release.outputs.LATEST != null }}
     runs-on: ubuntu-latest
     
     steps:
