@@ -27,7 +27,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           #ref: ${{ vars.STORED_ME_RELEASE }}
-          ref: actions-test
           lfs: true
 
       - name: Install SDK
