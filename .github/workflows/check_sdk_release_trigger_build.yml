@@ -1,0 +1,47 @@
+name: Check SDK Release and Trigger Build
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  get_sdk_release:
+    name: Getting latest sdk release
+    runs-on: ubuntu-latest
+    outputs:
+      LATEST: ${{ steps.get_latest.outputs.LATEST }}
+      
+    steps:
+      - name: Get LATEST SDK release
+        id: get_latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/vrchat/packages/releases/latest | jq -r '.tag_name')
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
+          
+  update_tag:
+    name: Updating tag
+    needs: get_sdk_release
+    if: ${{ vars.STORED_SDK_RELEASE != needs.get_sdk_release.outputs.LATEST && needs.get_sdk_release.outputs.LATEST != 'null' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Update STORED_SDK_RELEASE
+        env:
+           GITHUB_TOKEN: ${{ secrets.MEFORK_PHYSBONE_WRITE_VARS_TOKEN }}
+           LATEST: ${{ needs.get_sdk_release.outputs.LATEST }}
+        run: gh variable set STORED_SDK_RELEASE --body "$LATEST"
+          
+  trigger_build:
+    name: Triggering build
+    needs: update_tag
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger Build Action
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          event-type: build_trigger
