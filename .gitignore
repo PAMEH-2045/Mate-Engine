@@ -1,14 +1,6 @@
 # MEPhysBone
 Assets/Editor/SetupSceneForBuild.cs
-Assets/Plugins/VRC.Dynamics.dll
-Assets/Plugins/System.Collections.Immutable.dll
-Assets/Plugins/VRC.SDK3.Dynamics.Constraint.dll
-Assets/Plugins/VRC.SDK3.Dynamics.Constraint.dll.meta
-Assets/Plugins/VRC.SDK3.Dynamics.Contact.dll
-Assets/Plugins/VRC.SDK3.Dynamics.Contact.dll.meta
-Assets/Plugins/VRC.SDK3.Dynamics.PhysBone.dll
-Assets/Plugins/VRC.SDK3.Dynamics.PhysBone.dll.meta
-Assets/Plugins/UniTask
+#Assets/Plugins/MEPhysBone.dll
 
 # Ignore temporaries from GameCI
 /[Aa]rtifacts/
