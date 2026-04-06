@@ -37,7 +37,7 @@ jobs:
           $sdkrelease = Invoke-RestMethod "https://api.github.com/repos/vrchat/packages/releases/tags/$env:STORED_SDK_RELEASE"
           $sdkbase = $sdkrelease.assets | Where-Object { $_.name -like "*base*.zip" }
           
-          Invoke-WebRequest $asset.browser_download_url -OutFile "sdkbase.zip"
+          Invoke-WebRequest $sdkbase.browser_download_url -OutFile "sdkbase.zip"
           
           Expand-Archive sdkbase.zip -DestinationPath sdkbase
           
