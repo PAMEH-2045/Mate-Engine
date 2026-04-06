@@ -11,15 +11,15 @@ public static class SetupSceneForBuild
     {
         if (Application.isBatchMode)
         {
-            AddScenesToBuild();
+            AddSceneToBuild();
         }
     }
 
     [MenuItem("Build/Setup Scene For Build")]
-    public static void AddScenesToBuild()
+    public static void AddSceneToBuild()
     {
         string ScenePath = Directory.GetFiles("Assets/MATE ENGINE - Scenes", "*.unity", SearchOption.AllDirectories)
-            .FirstOrDefault(p => Path.GetFileName(p).ToLower().Contains("main"));
+            .First(p => Path.GetFileName(p).ToLower().Contains("main"));
 
         if (!System.IO.File.Exists(ScenePath))
         {

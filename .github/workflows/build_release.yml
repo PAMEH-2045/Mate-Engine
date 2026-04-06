@@ -15,23 +15,12 @@ jobs:
     steps:
       - name: Get TAG
         id: get_tag
-        run: echo "RELEASE_TAG=MEPhysBone_${{ vars.STORED_ME_RELEASE }}" >> $GITHUB_OUTPUT
-          
-  sync_upstream:
-    name: Syncing with upstream
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
-    steps:
-      - uses: thiagokokada/merge-upstream@v1.0.2
-        with:
-          branch: main
+        run: echo "RELEASE_TAG=MEPhysBone_${{ vars.STORED_ME_RELEASE }}_SDKv${{ vars.STORED_SDK_RELEASE }}" >> $GITHUB_OUTPUT
           
   build:
     name: Building
     runs-on: windows-latest
-    needs: [get_tag, sync_upstream]
+    needs: get_tag
       
     steps:
       - name: Checkout
@@ -39,7 +28,35 @@ jobs:
         with:
           #ref: ${{ vars.STORED_ME_RELEASE }}
           lfs: true
+
+      - name: Install SDK
+        shell: pwsh
+        env:
+            STORED_SDK_RELEASE: ${{ vars.STORED_SDK_RELEASE }}
+        run: |
+          $sdkrelease = Invoke-RestMethod "https://api.github.com/repos/vrchat/packages/releases/tags/$STORED_SDK_RELEASE"
+          $sdkbase = $sdkrelease.assets | Where-Object { $_.name -like "*base*.zip" }
           
+          Invoke-WebRequest $asset.browser_download_url -OutFile "sdkbase.zip"
+          
+          Expand-Archive sdkbase.zip -DestinationPath sdkbase
+          
+          $from = "sdkbase\Runtime\VRCSDK"
+          $to = "Assets\Plugins"
+          $files = @(
+            "Dependencies\Managed\System.Collections.Immutable.dll"
+            "Plugins\VRC.Dynamics.dll"
+            "Plugins\VRC.SDK3.Dynamics.PhysBone.dll"
+            "Plugins\VRC.SDK3.Dynamics.Contact.dll"
+            "Plugins\VRC.SDK3.Dynamics.Constraint.dll"
+            "Plugins\VRCSDKBase.dll"
+            "Plugins\UniTask"
+          )
+          
+          foreach ($file in $files) {
+            Move-Item (Join-Path $from $file) $to
+          }
+        
       # Cache
       - uses: actions/cache@v3
         with:
@@ -96,6 +113,7 @@ jobs:
             "Managed/Unity.Mathematics.dll"
             "Managed/VRC.Dynamics.dll"
             "Managed/VRC.SDK3.Dynamics.Constraint.dll"
+            "Managed/VRC.SDK3.Dynamics.Contact.dll"
             "Managed/VRC.SDK3.Dynamics.PhysBone.dll"
           )
           
