@@ -27,7 +27,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           #ref: ${{ vars.STORED_ME_RELEASE }}
-          allowDirtyBuild: true
           lfs: true
 
       - name: Install SDK
@@ -74,6 +73,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          allowDirtyBuild: true
           targetPlatform: StandaloneWindows64
           buildName: MateEngineX
 
