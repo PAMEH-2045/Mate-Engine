@@ -36,7 +36,7 @@ public class AvatarBigScreenToggleHandler : MonoBehaviour
         var behaviours = GetComponents<Behaviour>();
         foreach (var b in behaviours)
         {
-            if (b == this || b == bigScreenHandler) continue;
+            if (b == this || b == bigScreenHandler || b == null) continue;
 
             bool shouldDisable = settings.Exists(s => s.componentTypeName == b.GetType().FullName && s.disableInBigScreen);
 
