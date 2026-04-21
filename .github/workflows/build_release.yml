@@ -128,9 +128,10 @@ jobs:
           zip -r "$RELEASE_TAG.zip" "$RELEASE_TAG"
       
       - name: Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.get_tag.outputs.RELEASE_TAG }}
+          prerelease: true
           body: |
             Installation:
             1. Download ${{ needs.get_tag.outputs.RELEASE_TAG }}.zip and unpack
