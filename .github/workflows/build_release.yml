@@ -119,8 +119,8 @@ jobs:
             "Managed/VRCSDKBase.dll"
             "Managed/MEPhysBone.dll"
             "Managed/0Harmony.dll"
-            "System.Core.dll"
-            "System.dll"
+            "Managed/System.Core.dll"
+            "Managed/System.dll"
           )
           
           for file in "${FILES[@]}"; do
